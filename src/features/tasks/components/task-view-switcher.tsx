@@ -13,7 +13,7 @@ import { DataFilters } from "./data-filters";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 
-import { useGetTasks } from "../api/use-get-task";
+import { useGetTasks } from "../api/use-get-tasks";
 import { useTaskFilters } from "../hooks/use-task-filters";
 import { useCreateTaskModal } from "../hooks/use-create-task-modal";
 
