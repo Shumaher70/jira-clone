@@ -1,7 +1,7 @@
 "use client";
 import { useCallback } from "react";
 import { useQueryState } from "nuqs";
-import { ChartNoAxesColumnDecreasing, Loader, PlusIcon } from "lucide-react";
+import { Loader, PlusIcon } from "lucide-react";
 
 import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspaceId";
 
@@ -22,7 +22,13 @@ import { useTaskFilters } from "../hooks/use-task-filters";
 import { useCreateTaskModal } from "../hooks/use-create-task-modal";
 import { useBulkUpdateTasks } from "../api/use-bulk-update-tasks";
 
-export const TaskViewSwitcher = () => {
+interface TaskViewSwitcherProps {
+  hideProjectFilter?: boolean;
+}
+
+export const TaskViewSwitcher = ({
+  hideProjectFilter,
+}: TaskViewSwitcherProps) => {
   const [{ status, assigneeId, projectId, dueDate }] = useTaskFilters();
 
   const [view, setView] = useQueryState("task-view", {
@@ -76,7 +82,7 @@ export const TaskViewSwitcher = () => {
           </Button>
         </div>
         <DottedSeparator className="my-4" />
-        <DataFilters />
+        <DataFilters hideProjectFilter={hideProjectFilter} />
         <DottedSeparator className="my-4" />
         {isLoadingTask ? (
           <div className="flex h-[200px] w-full flex-col items-center justify-center rounded-lg border">
