@@ -1,37 +1,37 @@
-import { FolderIcon, ListChecksIcon, UserIcon } from "lucide-react";
+import { ListCheckIcon, UserIcon, FolderIcon } from "lucide-react";
 
-import { useGetMembers } from "@/features/members/api/use-get-members";
 import { useGetProjects } from "@/features/projects/api/use-get-projects";
-import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspaceId";
 
 import { DatePicker } from "@/components/date-picker";
-
 import {
   Select,
-  SelectItem,
-  SelectValue,
-  SelectTrigger,
   SelectContent,
+  SelectItem,
   SelectSeparator,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
+
 import { TaskStatus } from "../types";
 import { useTaskFilters } from "../hooks/use-task-filters";
+import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspaceId";
+import { useGetMembers } from "@/features/members/api/use-get-members";
 
-interface DataFilterProps {
+interface DataFiltersProps {
   hideProjectFilter?: boolean;
 }
 
-export const DataFilters = ({ hideProjectFilter }: DataFilterProps) => {
+export const DataFilters = ({ hideProjectFilter }: DataFiltersProps) => {
   const workspaceId = useWorkspaceId();
 
-  const { data: members, isLoading: isLoadingMembers } = useGetMembers({
-    workspaceId,
-  });
   const { data: projects, isLoading: isLoadingProjects } = useGetProjects({
     workspaceId,
   });
+  const { data: members, isLoading: isLoadingMembers } = useGetMembers({
+    workspaceId,
+  });
 
-  const isLoading = isLoadingMembers || isLoadingProjects;
+  const isLoading = isLoadingProjects || isLoadingMembers;
 
   const projectOptions = projects?.documents.map((project) => ({
     value: project.$id,
@@ -43,17 +43,24 @@ export const DataFilters = ({ hideProjectFilter }: DataFilterProps) => {
     label: member.name,
   }));
 
-  const [{ status, assigneeId, projectId, dueDate }, setFilters] =
+  const [{ assigneeId, dueDate, projectId, status }, setFilters] =
     useTaskFilters();
 
-  const onStatusChange = (value: string) => {
-    setFilters({ status: value === "all" ? null : (value as TaskStatus) });
-  };
-  const onAssigneeChange = (value: string) => {
-    setFilters({ assigneeId: value === "all" ? null : (value as string) });
-  };
-  const onProjectChange = (value: string) => {
-    setFilters({ projectId: value === "all" ? null : (value as string) });
+  const onFilterChange = (
+    value: string | Date | TaskStatus | null,
+    type: "status" | "assigneeId" | "projectId" | "dueDate",
+  ) => {
+    if (value === "all" || !value) {
+      value = null;
+    } else {
+      if (type === "dueDate") {
+        value = (value as Date).toISOString();
+      }
+    }
+
+    setFilters({
+      [type]: value,
+    });
   };
 
   if (isLoading) return null;
@@ -62,73 +69,74 @@ export const DataFilters = ({ hideProjectFilter }: DataFilterProps) => {
     <div className="flex flex-col gap-2 lg:flex-row">
       <Select
         defaultValue={status ?? undefined}
-        onValueChange={(value) => onStatusChange(value)}
+        onValueChange={(value) => onFilterChange(value, "status")}
       >
         <SelectTrigger className="h-8 w-full lg:w-auto">
           <div className="flex items-center pr-2">
-            <ListChecksIcon className="mr-2 size-4" />
+            <ListCheckIcon className="mr-2 size-4" />
             <SelectValue placeholder="All statuses" />
           </div>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectSeparator />
-            <SelectItem value={TaskStatus.BACKLOG}>Backlog</SelectItem>
-            <SelectItem value={TaskStatus.IN_PROGRESS}>In progress</SelectItem>
-            <SelectItem value={TaskStatus.IN_REVIEW}>In Review</SelectItem>
-            <SelectItem value={TaskStatus.TODO}>Todo</SelectItem>
-            <SelectItem value={TaskStatus.DONE}>Done</SelectItem>
-          </SelectContent>
         </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          <SelectSeparator />
+          <SelectItem value={TaskStatus.BACKLOG}>Backlog</SelectItem>
+          <SelectItem value={TaskStatus.IN_PROGRESS}>In Progress</SelectItem>
+          <SelectItem value={TaskStatus.IN_REVIEW}>In Review</SelectItem>
+          <SelectItem value={TaskStatus.TODO}>Todo</SelectItem>
+          <SelectItem value={TaskStatus.DONE}>Done</SelectItem>
+        </SelectContent>
       </Select>
 
       <Select
         defaultValue={assigneeId ?? undefined}
-        onValueChange={(value) => onAssigneeChange(value)}
+        onValueChange={(value) => onFilterChange(value, "assigneeId")}
       >
         <SelectTrigger className="h-8 w-full lg:w-auto">
           <div className="flex items-center pr-2">
             <UserIcon className="mr-2 size-4" />
             <SelectValue placeholder="All assignees" />
           </div>
-          <SelectContent>
-            <SelectItem value="all">All assignees</SelectItem>
-            <SelectSeparator />
-            {memberOptions?.map((member) => (
-              <SelectItem key={member.value} value={member.value}>
-                {member.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
         </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All assignees</SelectItem>
+          <SelectSeparator />
+          {memberOptions?.map((member) => (
+            <SelectItem key={member.value} value={member.value}>
+              {member.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
       </Select>
 
-      <Select
-        defaultValue={projectId ?? undefined}
-        onValueChange={(value) => onProjectChange(value)}
-      >
-        <SelectTrigger className="h-8 w-full lg:w-auto">
-          <div className="flex items-center pr-2">
-            <FolderIcon className="mr-2 size-4" />
-            <SelectValue placeholder="All projects" />
-          </div>
+      {!hideProjectFilter && (
+        <Select
+          defaultValue={projectId ?? undefined}
+          onValueChange={(value) => onFilterChange(value, "projectId")}
+        >
+          <SelectTrigger className="h-8 w-full lg:w-auto">
+            <div className="flex items-center pr-2">
+              <FolderIcon className="mr-2 size-4" />
+              <SelectValue placeholder="All projects" />
+            </div>
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All projects</SelectItem>
             <SelectSeparator />
-            {projectOptions?.map((member) => (
-              <SelectItem key={member.value} value={member.value}>
-                {member.label}
+            {projectOptions?.map((project) => (
+              <SelectItem key={project.value} value={project.value}>
+                {project.label}
               </SelectItem>
             ))}
           </SelectContent>
-        </SelectTrigger>
-      </Select>
+        </Select>
+      )}
+
       <DatePicker
         placeholder="Due date"
+        onChange={(value) => onFilterChange(value, "dueDate")}
         className="h-8 w-full lg:w-auto"
         value={dueDate ? new Date(dueDate) : undefined}
-        onChange={(date) =>
-          setFilters({ dueDate: date ? date.toISOString() : null })
-        }
       />
     </div>
   );
