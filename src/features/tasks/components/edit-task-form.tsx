@@ -2,11 +2,9 @@
 
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { MemberAvatar } from "@/features/members/components/member-avatar";
-import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspaceId";
 import { ProjectAvatar } from "@/features/projects/components/project-avatar";
 
 import { cn } from "@/lib/utils";
@@ -47,8 +45,6 @@ export const EditTaskForm = ({
   projectOptions,
   initialValues,
 }: EditTaskFormProps) => {
-  const workspaceId = useWorkspaceId();
-  const router = useRouter();
   const { mutate, isPending } = useUpdateTask();
 
   const form = useForm<z.infer<typeof createTaskSchema>>({
